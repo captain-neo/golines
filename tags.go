@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/dave/dst"
 	"github.com/fatih/structtag"
@@ -159,8 +160,18 @@ func alignTags(fields []*dst.Field) {
 
 // get real tag value's length, fix multi-byte character's length, such as `ï`
 // or `中文`
+// in most cases, the length of chinese character is 2
 func tagValueLen(s string) int {
-	return len([]rune(s))
+	width := 0
+	for _, r := range s {
+		switch {
+		case unicode.Is(unicode.Han, r):
+			width += 2
+		default:
+			width++
+		}
+	}
+	return width
 }
 
 // getWidth tries to guess the formatted width of a dst node expression. If this isn't (yet)
